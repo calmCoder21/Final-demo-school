@@ -1,9 +1,12 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next();
+  let res = NextResponse.next({
+    request: {
+      headers: req.headers,
+    },
+  });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -23,11 +26,8 @@ export async function middleware(req: NextRequest) {
     }
   );
 
-  // 🔥 Get user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  // Get user session
+  const { data: { user } } = await supabase.auth.getUser();
   const pathname = req.nextUrl.pathname;
 
   // 🔒 PROTECTED ROUTES
@@ -42,7 +42,7 @@ export async function middleware(req: NextRequest) {
     return res;
   }
 
-  // 🔥 Get role
+  // 🔥 Get role from DB
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
@@ -60,7 +60,6 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
-  // guardians can access dashboard only
   if (isDashboardRoute && !["guardian", "admin", "finance"].includes(role)) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
@@ -68,7 +67,15 @@ export async function middleware(req: NextRequest) {
   return res;
 }
 
-// 🔥 Apply to routes
 export const config = {
-  matcher: ["/admin/:path*", "/finance/:path*", "/dashboard/:path*"],
+  matcher: [
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - auth/callback (EXCLUDE this so server route works)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|auth/callback).*)',
+  ],
 };
