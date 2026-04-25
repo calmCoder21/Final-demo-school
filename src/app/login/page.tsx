@@ -49,9 +49,9 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: "https://final-demo-school.vercel.app/auth/callback",
-        flowType: "pkce", // 🔥 Required for server-side route.ts logic
+        redirectTo: "https://final-demo-school.vercel.app/auth/callback"
       },
+      flowType: "pkce", // 🔥 Required for server-side route.ts logic
     });
 
     if (error) {
