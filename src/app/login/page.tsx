@@ -50,9 +50,10 @@ export default function LoginPage() {
       provider: "google",
       options: {
         redirectTo: "https://final-demo-school.vercel.app/auth/callback",
-        flowType: "pkce", // 🔥 Required for server-side route.ts logic
       },
+      flowType: "pkce", // 🔥 Required for server-side route.ts logic
     });
+
 
     if (error) {
       alert(error.message);
